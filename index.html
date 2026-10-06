@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#ffc933">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>مغامرة جدول الضرب</title>
+<style>
+:root{--bg:#fff4d6;--ink:#2b2350;--card:#fff;--a:#ff6b4a;--b:#1fb5a8;--c:#7a5cff;--ok:#2fb344;--bad:#e5484d;--edge:#e3d29b}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:Tahoma,"Segoe UI",Arial,sans-serif;font-weight:bold}
+#app{max-width:560px;margin:0 auto;padding:16px 16px 40px}
+h1{font-size:2rem;margin:.2em 0;line-height:1.2}
+h2{font-size:1.3rem;margin:.3em 0}
+.ic{vertical-align:middle;margin:1px}
+.top{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.hero{text-align:center;padding:8px 0 4px}
+.stars{background:var(--card);border-radius:99px;padding:4px 14px;box-shadow:0 3px 0 var(--edge)}
+button{font:inherit;color:inherit;cursor:pointer;border:0;border-radius:18px;padding:12px 16px;background:var(--card);box-shadow:0 5px 0 var(--edge)}
+button:active{transform:translateY(4px);box-shadow:0 1px 0 var(--edge)}
+.btn{background:var(--a);color:#fff;font-size:1.1rem;box-shadow:0 5px 0 #b94328}
+.btn.alt{background:var(--b);box-shadow:0 5px 0 #11857b}
+.btn.big{width:100%;margin-top:14px;font-size:1.3rem}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-top:12px}
+.tile{aspect-ratio:1;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#2b2350;font-size:1.9rem;line-height:1.1;box-shadow:0 5px 0 rgba(0,0,0,.25);padding:4px}
+.card{background:var(--card);border-radius:22px;padding:14px;margin-top:12px;box-shadow:0 5px 0 var(--edge)}
+.rows{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px}
+.row{font-size:1.2rem;padding:10px 6px;direction:rtl}
+.row.on{background:var(--c);color:#fff;box-shadow:0 5px 0 #4b33c4}
+.groups{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:10px}
+.g{background:var(--bg);border:3px dashed var(--b);border-radius:16px;padding:6px 8px;line-height:1;max-width:100%}
+.eq{font-size:2.2rem;text-align:center;margin:6px 0}
+.q{font-size:3rem;text-align:center;margin:14px 0 6px;direction:rtl}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px}
+.opt{font-size:2rem;padding:18px 8px}
+.opt.good{background:var(--ok);color:#fff;box-shadow:0 5px 0 #1f8030}
+.opt.bad{background:var(--bad);color:#fff;box-shadow:0 5px 0 #a82a2f}
+.bar{height:14px;background:var(--card);border-radius:99px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--b);transition:width .3s}
+.msg{min-height:2.2em;text-align:center;font-size:1.2rem;margin-top:10px}
+.pop{animation:pop .4s}
+@keyframes pop{50%{transform:scale(1.25)}}
+</style>
+</head>
+<body>
+<div id="app"></div>
+<script>
+const AR=n=>String(n).replace(/\d/g,d=>'٠١٢٣٤٥٦٧٨٩'[d]);
+const P={
+1:'<circle cx="12" cy="14" r="8" fill="#e5484d"/><path d="M12 7c0-3 2-4 4-4 0 3-2 4-4 4z" fill="#2fb344"/>',
+2:'<ellipse cx="10" cy="12" rx="8" ry="5.5" fill="#ff9f1a"/><path d="M17 12l6-5v10z" fill="#ff7a00"/><circle cx="6.5" cy="10.5" r="1.3" fill="#2b2350"/>',
+3:'<path d="M12 2l2.9 6.3 6.9.8-5.1 4.7 1.4 6.8L12 17.1 5.9 20.6l1.4-6.8L2.2 9.1l6.9-.8z" fill="#ffc933" stroke="#e0a100" stroke-width="1"/>',
+4:'<path d="M12 2c4 3 5 8 4 14H8c-1-6 0-11 4-14z" fill="#e8ecf5" stroke="#7a5cff"/><circle cx="12" cy="9" r="2" fill="#1fb5a8"/><path d="M8 13l-4 5 4-1zM16 13l4 5-4-1z" fill="#ff6b4a"/><path d="M10 17l2 5 2-5z" fill="#ffc933"/>',
+5:'<circle cx="12" cy="13" r="8" fill="#ffd93d"/><path d="M9.5 13h5l-2.5 3z" fill="#ff7a00"/><circle cx="9" cy="10" r="1.2" fill="#2b2350"/><circle cx="15" cy="10" r="1.2" fill="#2b2350"/>',
+6:'<path d="M12 21C5 16 4 9 6 8c2-1 4 0 6 0s4-1 6 0c2 1 1 8-6 13z" fill="#e5484d"/><path d="M7 7l5-3 5 3-5 2z" fill="#2fb344"/><circle cx="10" cy="12" r=".8" fill="#fff"/><circle cx="14" cy="13" r=".8" fill="#fff"/><circle cx="12" cy="16" r=".8" fill="#fff"/>',
+7:'<ellipse cx="7.5" cy="9" rx="5.5" ry="6" fill="#7a5cff"/><ellipse cx="16.5" cy="9" rx="5.5" ry="6" fill="#ff6b9d"/><ellipse cx="8" cy="17" rx="3.5" ry="4" fill="#9a85ff"/><ellipse cx="16" cy="17" rx="3.5" ry="4" fill="#ff9fc0"/><rect x="11" y="5" width="2" height="16" rx="1" fill="#2b2350"/>',
+8:'<ellipse cx="12" cy="10" rx="7" ry="8" fill="#1fb5a8"/><path d="M12 18l-2 3h4z" fill="#1fb5a8"/><path d="M12 21c-2 1 2 1 0 3" stroke="#2b2350" fill="none"/><ellipse cx="9" cy="7" rx="1.5" ry="2.5" fill="#fff" opacity=".5"/>',
+9:'<ellipse cx="11" cy="13" rx="8" ry="6" fill="#2fb344"/><circle cx="21" cy="12" r="2.8" fill="#6ed37e"/><rect x="5" y="17" width="3" height="4" rx="1" fill="#6ed37e"/><rect x="14" y="17" width="3" height="4" rx="1" fill="#6ed37e"/><path d="M11 8v10M6 11l10 4M16 11L6 15" stroke="#1f8030" fill="none"/>',
+10:'<circle cx="12" cy="12" r="9" fill="#d9a066"/><circle cx="9" cy="9" r="1.3" fill="#6b3f1d"/><circle cx="15" cy="11" r="1.3" fill="#6b3f1d"/><circle cx="10" cy="15" r="1.3" fill="#6b3f1d"/><circle cx="15.5" cy="16" r="1" fill="#6b3f1d"/>',
+11:'<g fill="#ff7eb6"><circle cx="12" cy="6" r="4"/><circle cx="18" cy="11" r="4"/><circle cx="16" cy="18" r="4"/><circle cx="8" cy="18" r="4"/><circle cx="6" cy="11" r="4"/></g><circle cx="12" cy="12" r="3.2" fill="#ffd93d"/>',
+12:'<circle cx="12" cy="14" r="8" fill="#e5484d"/><path d="M12 6v16" stroke="#2b2350"/><circle cx="12" cy="5" r="3" fill="#2b2350"/><circle cx="8" cy="12" r="1.5" fill="#2b2350"/><circle cx="16" cy="12" r="1.5" fill="#2b2350"/><circle cx="8.5" cy="17" r="1.3" fill="#2b2350"/><circle cx="15.5" cy="17" r="1.3" fill="#2b2350"/>'
+};
+const IC=(n,s)=>`<svg class="ic" viewBox="0 0 24 24" width="${(s||1.3)*16}" height="${(s||1.3)*16}">${P[n]}</svg>`;
+const OWL='<svg viewBox="0 0 64 64" width="90" height="90"><path d="M12 8l10 8M52 8l-10 8" stroke="#6b3f1d" stroke-width="5" stroke-linecap="round"/><ellipse cx="32" cy="38" rx="22" ry="24" fill="#8a5a2b"/><ellipse cx="32" cy="46" rx="14" ry="15" fill="#f3d9a4"/><circle cx="22" cy="28" r="9" fill="#fff"/><circle cx="42" cy="28" r="9" fill="#fff"/><circle cx="23" cy="29" r="4" fill="#2b2350"/><circle cx="41" cy="29" r="4" fill="#2b2350"/><path d="M28 34h8l-4 7z" fill="#ff9f1a"/></svg>';
+const NAMES=['الواحد','الاثنين','الثلاثة','الأربعة','الخمسة','الستة','السبعة','الثمانية','التسعة','العشرة','الأحد عشر','الاثني عشر'];
+const $=document.getElementById('app');
+let stars=0;
+try{stars=+localStorage.getItem('mt-stars')||0}catch(e){}
+function addStars(n){stars+=n;try{localStorage.setItem('mt-stars',stars)}catch(e){}}
+
+let AC=null;
+function tone(f,t,d,type,v){try{
+  AC=AC||new (window.AudioContext||window.webkitAudioContext)();
+  if(AC.state==='suspended')AC.resume();
+  const o=AC.createOscillator(),g=AC.createGain(),s=AC.currentTime+t;
+  o.type=type||'sine';o.frequency.value=f;
+  g.gain.setValueAtTime(0.0001,s);
+  g.gain.exponentialRampToValueAtTime(v||0.25,s+0.02);
+  g.gain.exponentialRampToValueAtTime(0.0001,s+d);
+  o.connect(g);g.connect(AC.destination);o.start(s);o.stop(s+d+0.05);
+}catch(e){}}
+const SND={
+  tap:()=>tone(660,0,.08,'triangle'),
+  good:()=>{tone(523,0,.15);tone(659,.15,.15);tone(784,.3,.3)},
+  bad:()=>{tone(220,0,.25,'sawtooth',.15);tone(165,.2,.35,'sawtooth',.15)},
+  win:()=>{[523,659,784,1047].forEach((f,i)=>tone(f,i*.15,.25))}
+};
+document.addEventListener('click',e=>{if(e.target.closest('button')&&!e.target.closest('.opt'))SND.tap()});
+function speak(t){
+  try{if(window.speechSynthesis){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(t);u.lang='ar-SA';u.rate=.85;speechSynthesis.speak(u)}}catch(e){}
+}
+const shuffle=a=>a.map(x=>[Math.random(),x]).sort((p,q)=>p[0]-q[0]).map(x=>x[1]);
+const rep=(n,k)=>Array(k).fill(IC(n)).join('');
+
+function home(){
+  $.innerHTML=`
+  <div class="top"><span></span><span class="stars">${IC(3,1)} ${AR(stars)}</span></div>
+  <div class="hero">${OWL}<h1>مغامرة جدول الضرب</h1><div>اختر رقمًا لتتعلّم جدوله، ثم اختبر نفسك!</div></div>
+  <div class="grid">${[...Array(12)].map((_,i)=>`<button class="tile" style="background:hsl(${i*30+10},85%,68%)" onclick="learn(${i+1},1)">${AR(i+1)}${IC(i+1,1.6)}</button>`).join('')}</div>
+  <button class="btn alt big" onclick="quiz(0)">تحدّي كل الجداول</button>`;
+}
+function learn(n,k){
+  const rows=[...Array(12)].map((_,i)=>i+1);
+  $.innerHTML=`
+  <div class="top"><button onclick="home()">الرئيسية</button><span class="stars">${IC(3,1)} ${AR(stars)}</span></div>
+  <h2>جدول ${NAMES[n-1]}</h2>
+  <div class="card">
+    <div class="eq pop">${AR(n)} × ${AR(k)} = ${AR(n*k)}</div>
+    <div style="text-align:center">${AR(k)} مجموعات، في كل مجموعة ${AR(n)} ${IC(n)}</div>
+    <div class="groups">${Array(k).fill(`<div class="g">${rep(n,n)}</div>`).join('')}</div>
+    <button class="btn alt big" style="margin-top:12px" onclick="speak('${n} في ${k} يساوي ${n*k}')">استمع</button>
+  </div>
+  <div class="rows">${rows.map(r=>`<button class="row ${r===k?'on':''}" onclick="learn(${n},${r})">${AR(n)} × ${AR(r)} = ${AR(n*r)}</button>`).join('')}</div>
+  <button class="btn big" onclick="quiz(${n})">اختبر نفسك في جدول ${AR(n)}</button>`;
+}
+let Q=null;
+function quiz(n){
+  const qs=[];
+  for(let i=0;i<10;i++){const a=n||1+Math.floor(Math.random()*12),b=1+Math.floor(Math.random()*12);qs.push([a,b])}
+  Q={n,qs,i:0,score:0,lock:false};
+  ask();
+}
+function ask(){
+  const [a,b]=Q.qs[Q.i],c=a*b;
+  const pool=new Set([c+a,c-a,c+b,c-b,c+1,c-1,c+10,c-10]);
+  pool.delete(c);
+  const wrong=shuffle([...pool].filter(x=>x>0)).slice(0,3);
+  const opts=shuffle([c,...wrong]);
+  const big=Math.max(a,b),small=Math.min(a,b);
+  Q.lock=false;
+  $.innerHTML=`
+  <div class="top"><button onclick="home()">الرئيسية</button><span class="stars">الصحيح: ${AR(Q.score)}</span></div>
+  <div class="bar"><i style="width:${Q.i*10}%"></i></div>
+  <div style="text-align:center;margin-top:6px">السؤال ${AR(Q.i+1)} من ${AR(10)}</div>
+  <div class="card"><div class="q">${AR(a)} × ${AR(b)} = ؟</div>
+  <div class="groups">${Array(small).fill(`<div class="g">${rep(big,big)}</div>`).join('')}</div></div>
+  <div class="opts">${opts.map(o=>`<button class="opt" onclick="pick(this,${o},${c})">${AR(o)}</button>`).join('')}</div>
+  <div class="msg" id="msg"></div>`;
+}
+function pick(el,o,c){
+  if(Q.lock)return;Q.lock=true;
+  const msg=document.getElementById('msg');
+  if(o===c){SND.good();el.classList.add('good','pop');Q.score++;msg.textContent=['أحسنت!','رائع!','ممتاز!','أنت بطل!'][Math.floor(Math.random()*4)];}
+  else{SND.bad();el.classList.add('bad');[...document.querySelectorAll('.opt')].find(b=>b.textContent===AR(c)).classList.add('good');msg.textContent='لا بأس، حاول في المرة القادمة';}
+  setTimeout(()=>{Q.i++;Q.i<10?ask():finish()},1200);
+}
+function finish(){
+  const s=Q.score,st=s>=9?3:s>=6?2:s>=3?1:0;
+  addStars(st);
+  if(st>0)SND.win();
+  $.innerHTML=`
+  <div class="hero"><div class="pop">${OWL}</div>
+  <h1>${st===3?'أنت عبقري الضرب!':st>=1?'عمل جميل!':'تابع التدريب!'}</h1>
+  <div class="eq">${AR(s)} / ${AR(10)}</div>
+  <div>${Array(st).fill(IC(3,2.4)).join('')}</div></div>
+  <button class="btn big" onclick="quiz(${Q.n})">العب مرة أخرى</button>
+  ${Q.n?`<button class="btn alt big" onclick="learn(${Q.n},1)">راجع الجدول</button>`:''}
+  <button class="big" style="width:100%;margin-top:14px" onclick="home()">الرئيسية</button>`;
+}
+home();
+if('serviceWorker' in navigator){window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}))}
+</script>
+</body>
+</html>
